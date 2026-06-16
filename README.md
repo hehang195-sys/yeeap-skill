@@ -1,0 +1,78 @@
+# yeeap-skill
+
+![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)
+![NPM](https://img.shields.io/badge/npm-yeeap--cli%400.3.1-cb3837.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+**Project URL:** [https://github.com/hehang195-sys/yeeap-skill](https://github.com/hehang195-sys/yeeap-skill)
+
+**payment-infra-rd** 类技能：为第三方业务技能执行 yeeap 钱包支付交易。业务 Skill Phase 2 传入 `order_no` + `app_id`，本技能通过 **yeeap-cli** 读取本地订单文件并完成授权与支付。
+
+---
+
+## 安装
+
+```bash
+npx -y skills add "hehang195-sys/yeeap-skill" --agent '*' -g -y
+```
+
+安装后**完全退出并重启 Agent 客户端一次**，然后在对话中声明：**使用技能 `yeeap-wallet`**。
+
+---
+
+## 调用示例
+
+### 1. 处理支付（业务技能 Phase 2 调用）
+
+业务技能 Phase 1 已将订单写入 `~/.yeeap/orders/<app_id>/<order_no>.json` 后：
+
+```bash
+npx --yes yeeap-cli@0.3.1 pay -o <order_no> -a <app_id> --strict
+```
+
+### 2. 单独发起支付授权
+
+```bash
+npx --yes yeeap-cli@0.3.1 auth-init -a <app_id> --strict
+```
+
+### 3. 查询授权状态
+
+```bash
+npx --yes yeeap-cli@0.3.1 check-auth -i <auth_id> -a <app_id> --strict
+```
+
+---
+
+## 核心文件
+
+| 文件 | 说明 |
+|------|------|
+| [SKILL.md](./SKILL.md) | Agent 调用协议（pay / auth-init / check-auth 与 stdout 分流） |
+| [IMPORTANT_STATEMENTS.md](./IMPORTANT_STATEMENTS.md) | 技能来源追溯、CLI 鉴权原理、出站白名单、触发边界 |
+
+---
+
+## 权限与出站
+
+- **CLI 安装声明**：`npm:yeeap-cli@0.3.1`（锁定版本，不使用 `@latest`）
+- **出站白名单**：
+  - `registry.npmjs.org`（Preflight 与 CLI 安装/执行）
+  - `qaap.yeepay.com/yeeap`（Open API：下单、授权、查询）
+
+---
+
+## 安全模型
+
+- 全程**不读取** `.env`、配置文件或环境变量中的私钥
+- 全程**不要求**用户提供支付密码
+- 授权采用**一次性短效令牌**，需用户人类确认后方可完成支付
+- Agent **禁止自动轮询**授权状态
+
+详见 [IMPORTANT_STATEMENTS.md](./IMPORTANT_STATEMENTS.md)。
+
+---
+
+## License
+
+MIT
