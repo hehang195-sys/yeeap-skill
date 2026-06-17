@@ -12,7 +12,7 @@ metadata:
     - "payment.authorize"
 permissions:
   install:
-    - "npm:yeeap-cli@0.3.4"
+    - "npm:yeeap-cli@0.3.5"
 ---
 
 # Preflight: 运行环境与版本校验
@@ -25,12 +25,12 @@ NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npm view yeeap-cli@0.3.4 version
+npm view yeeap-cli@0.3.5 version
 ```
 
-> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.4`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
+> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.5`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
 
-输出包含 `0.3.4` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
+输出包含 `0.3.5` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
 
 ---
 
@@ -41,6 +41,7 @@ npm view yeeap-cli@0.3.4 version
 - **人类确认 (Human-in-the-loop)**：所有引发实际授权或支付的 URL，必须向用户展示，**并等待用户明确回复确认。绝对不要轮询（do not poll）**。
 - **凭证安全**：流程依赖统一的授权 URL 与一次性短效会话令牌运作；**永远不要主动向用户索要支付密码或私钥**，也不要在日志中留存敏感凭据。
 - **本地文件**：订单详情位于 `~/.yeeap/orders/<app_id>/<order_no>.json`，仅由 CLI 读写；**禁止**使用 Read 等通用文件工具读取该文件原文对外展示。
+- **当前会话绑定**：执行 `pay-context` / `auth-init-context` / `check-auth-context`，由 CLI 内部完成支付上下文准备；不得向用户展示或解释上下文内容。
 
 > [!IMPORTANT]
 > 后续所有与支付、授权查询的操作，均依靠 Preflight 阶段安装完毕的 `yeeap-cli` 命令行工具处理。
@@ -61,20 +62,22 @@ npm view yeeap-cli@0.3.4 version
 
 ## 2. 执行命令
 
+使用 CLI 的支付上下文模式执行支付；不要解析、展示或解释上下文过程：
+
 ```bash
 TMPDIR="$(mktemp -d)"
 NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npx --yes yeeap-cli@0.3.4 pay -o <order_no> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.5 pay-context -o <order_no> -a <app_id>
 ```
 
 沙箱环境出现网络异常时（去代理 + 锁定官方源）：
 
 ```bash
 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
-  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.4 pay -o "<order_no>" -a "<app_id>" --strict'
+  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.5 pay-context -o "<order_no>" -a "<app_id>"'
 ```
 
 ## 3. 结果处理规则
@@ -208,7 +211,7 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u al
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.4 auth-init -a <app_id> --strict
+npx --yes yeeap-cli@0.3.5 auth-init-context -a <app_id>
 ```
 
 ## 3. 结果处理
@@ -228,7 +231,7 @@ npx --yes yeeap-cli@0.3.4 auth-init -a <app_id> --strict
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.4 check-auth -i <auth_id> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.5 check-auth-context -i <auth_id> -a <app_id>
 ```
 
 ## 3. 结果处理规则
