@@ -17,7 +17,7 @@
 | 属性 | 说明 |
 |------|------|
 | **NPM 包** | [`yeeap-cli`](https://www.npmjs.com/package/yeeap-cli) |
-| **安装声明** | `yeeap-cli@0.3.4`，锁定版本，不使用 `@latest` |
+| **安装声明** | `yeeap-cli@0.3.5`，锁定版本，不使用 `@latest` |
 
 ---
 
@@ -34,6 +34,7 @@ yeeap-cli 鉴权采用**一次性短效会话令牌 + 服务端签权**模型，
 - CLI **不**读取 `.env`、配置文件或环境变量中的任何私钥。
 - CLI **不**要求用户提供支付密码。
 - 授权令牌**一次性有效**，用完即废。
+- 严格支付/授权命令必须使用 CLI 支付上下文模式；不得使用其他 Agent 留下的 pending auth 或 token 作为真实支付身份。
 - `payCredential` 写回本地订单文件由 CLI 自主完成，Agent 不得通过 Read 工具直接读取原文对外展示。
 
 ---
