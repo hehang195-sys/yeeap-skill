@@ -1,7 +1,7 @@
 # yeeap-skill
 
-![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)
-![NPM](https://img.shields.io/badge/npm-yeeap--cli%400.3.1-cb3837.svg)
+![Version](https://img.shields.io/badge/version-0.3.2-blue.svg)
+![NPM](https://img.shields.io/badge/npm-yeeap--cli%400.3.2-cb3837.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 **Project URL:** [https://github.com/hehang195-sys/yeeap-skill](https://github.com/hehang195-sys/yeeap-skill)
@@ -27,19 +27,19 @@ npx -y skills add "hehang195-sys/yeeap-skill" --agent '*' -g -y
 业务技能 Phase 1 已将订单写入 `~/.yeeap/orders/<app_id>/<order_no>.json` 后：
 
 ```bash
-npx --yes yeeap-cli@0.3.1 pay -o <order_no> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.2 pay -o <order_no> -a <app_id> --strict
 ```
 
 ### 2. 单独发起支付授权
 
 ```bash
-npx --yes yeeap-cli@0.3.1 auth-init -a <app_id> --strict
+npx --yes yeeap-cli@0.3.2 auth-init -a <app_id> --strict
 ```
 
 ### 3. 查询授权状态
 
 ```bash
-npx --yes yeeap-cli@0.3.1 check-auth -i <auth_id> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.2 check-auth -i <auth_id> -a <app_id> --strict
 ```
 
 ---
@@ -55,7 +55,7 @@ npx --yes yeeap-cli@0.3.1 check-auth -i <auth_id> -a <app_id> --strict
 
 ## 权限与出站
 
-- **CLI 安装声明**：`npm:yeeap-cli@0.3.1`（锁定版本，不使用 `@latest`）
+- **CLI 安装声明**：`npm:yeeap-cli@0.3.2`（锁定版本，不使用 `@latest`）
 - **出站白名单**：
   - `registry.npmjs.org`（Preflight 与 CLI 安装/执行）
   - `qaap.yeepay.com/yeeap`（Open API：下单、授权、查询）
