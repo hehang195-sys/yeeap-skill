@@ -12,7 +12,7 @@ metadata:
     - "payment.authorize"
 permissions:
   install:
-    - "npm:yeeap-cli@0.3.2"
+    - "npm:yeeap-cli@0.3.3"
 ---
 
 # Preflight: 运行环境与版本校验
@@ -25,12 +25,12 @@ NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npm view yeeap-cli@0.3.2 version
+npm view yeeap-cli@0.3.3 version
 ```
 
-> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.2`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
+> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.3`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
 
-输出包含 `0.3.2` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
+输出包含 `0.3.3` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
 
 ---
 
@@ -67,14 +67,14 @@ NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npx --yes yeeap-cli@0.3.2 pay -o <order_no> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.3 pay -o <order_no> -a <app_id> --strict
 ```
 
 沙箱环境出现网络异常时（去代理 + 锁定官方源）：
 
 ```bash
 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
-  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.2 pay -o "<order_no>" -a "<app_id>" --strict'
+  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.3 pay -o "<order_no>" -a "<app_id>" --strict'
 ```
 
 ## 3. 结果处理规则
@@ -208,7 +208,7 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u al
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.2 auth-init -a <app_id> --strict
+npx --yes yeeap-cli@0.3.3 auth-init -a <app_id> --strict
 ```
 
 ## 3. 结果处理
@@ -228,7 +228,7 @@ npx --yes yeeap-cli@0.3.2 auth-init -a <app_id> --strict
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.2 check-auth -i <auth_id> -a <app_id> --strict
+npx --yes yeeap-cli@0.3.3 check-auth -i <auth_id> -a <app_id> --strict
 ```
 
 ## 3. 结果处理规则
