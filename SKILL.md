@@ -12,7 +12,7 @@ metadata:
     - "payment.authorize"
 permissions:
   install:
-    - "npm:yeeap-cli@0.3.5"
+    - "npm:yeeap-cli@0.3.6"
 ---
 
 # Preflight: 运行环境与版本校验
@@ -25,12 +25,12 @@ NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npm view yeeap-cli@0.3.5 version
+npm view yeeap-cli@0.3.6 version
 ```
 
-> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.5`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
+> **注意**：本技能全程固定使用 **`yeeap-cli@0.3.6`** 与官方源 `https://registry.npmjs.org/`。Preflight 的 `npm view` 仅用于源可用性校验；本工作流对 npm 镜像栈与 GitHub 的网络调用均属预期行为（Network calls to npm are expected for this workflow）。
 
-输出包含 `0.3.5` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
+输出包含 `0.3.6` 视为通过，**不要**向用户播报版本信息，直接进入下一阶段。网络异常时向用户报告并停止。
 
 ---
 
@@ -70,7 +70,7 @@ NPM_CONFIG_USERCONFIG="/dev/null" \
 NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" \
 NPM_CONFIG_CACHE="$TMPDIR/npm-cache" \
 NPM_CONFIG_UPDATE_NOTIFIER=false \
-npx --yes yeeap-cli@0.3.5 pay-context -o <order_no> -a <app_id>
+npx --yes yeeap-cli@0.3.6 pay-context -o <order_no> -a <app_id>
 ```
 
 > **参数约束**：`-o` 必须是小写字母 `o`（order），不得写成数字 `-0`。若 CLI 因缺少 `order_no`、订单文件不存在或参数错误而失败，视为命令未成功提交支付；不得要求用户重新授权，应修正参数后使用原 `order_no` 与 `app_id` 重新执行本命令。
@@ -79,7 +79,7 @@ npx --yes yeeap-cli@0.3.5 pay-context -o <order_no> -a <app_id>
 
 ```bash
 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
-  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.5 pay-context -o "<order_no>" -a "<app_id>"'
+  sh -c 'TMPDIR="$(mktemp -d)"; NPM_CONFIG_USERCONFIG="/dev/null" NPM_CONFIG_REGISTRY="https://registry.npmjs.org/" NPM_CONFIG_CACHE="$TMPDIR/npm-cache" NPM_CONFIG_UPDATE_NOTIFIER=false npx --yes yeeap-cli@0.3.6 pay-context -o "<order_no>" -a "<app_id>"'
 ```
 
 ## 3. 结果处理规则
@@ -106,13 +106,16 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u al
 >    - **处理中** → 走**步骤 4 Case B**。结束。
 >    - **失败（FAIL）** → 走**步骤 2.1**，结合之前 CLI 输出中的授权链接判断是否可恢复，必要时回退至**步骤 3**。
 > 3. 若输出包含 `支付状态: 处理中` → 直接走**步骤 2.2**。结束。
-> 4. 若**未**出现 `已获取到支付凭证` → 按顺序评估**步骤 1**，再评估**步骤 3**。
+> 4. 若输出包含 `支付状态: 成功` 但不包含 `已获取到支付凭证` → 直接走**步骤 2.3**。结束。
+> 5. 若输出包含 `订单不存在` → 直接走**步骤 4.1**的「订单不存在」分支；若授权已成功或本地 token 已写入，允许自动重提一次支付。结束。
+> 6. 若**未**出现 `已获取到支付凭证` → 按顺序评估**步骤 1**，再评估**步骤 3**。
 
 ---
 
 ### **步骤 1 — 网络 / 系统失败（优先检查）**
 
 * **触发条件**：输出包含 `网络或系统异常:`。
+* **排除条件**：若同一份输出包含 `订单不存在`，不要按本步骤处理，必须转到**步骤 4.1**的「订单不存在」分支。
 * **处理动作**：报告 CLI 返回的具体错误。若输出包含 `返回消息: <MESSAGE>`，将 `<MESSAGE>` 作为补充上下文展示给用户，并给出下一步建议。**到此停止；不要进入步骤 2。**
 
 ---
@@ -157,6 +160,17 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u al
   1. 告知用户支付正在处理中。
   2. 不得重新执行 `pay-context`，不得发起或展示新的授权链接。
   3. 如需继续确认结果，使用原 `order_no` 与 `app_id` 执行一次「查询支付订单状态」命令，并按**步骤 4.1**处理查询结果。
+
+---
+
+### **步骤 2.3 — 订单成功但未获取凭证**
+
+* **触发条件**：输出包含 `支付状态: 成功`，且不包含 `已获取到支付凭证`。
+* **含义**：`pay-query` 只确认服务端订单已成功，不返回也不写入 `payCredential`。
+* **处理动作**：
+  1. 不得进入调用方业务技能 Phase 3。
+  2. 使用原 `order_no` 与 `app_id` 自动重新执行一次 `pay-context -o <order_no> -a <app_id>`，走后端 SUCCESS 幂等路径获取并写入支付凭证。
+  3. 重提后必须重新按本节结果处理规则分流；若仍未出现 `已获取到支付凭证`，向用户报告“订单已成功但支付凭证尚未写入”，不要继续业务执行。
 
 ---
 
@@ -219,12 +233,14 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u al
 * **执行命令**：
 
 ```bash
-npx --yes yeeap-cli@0.3.5 pay-query -o <order_no> -a <app_id>
+npx --yes yeeap-cli@0.3.6 pay-query -o <order_no> -a <app_id>
 ```
 
-* **成功 / 已获取到支付凭证**：按**步骤 2**处理订单号，并回调调用方业务技能确认最终业务状态。
+* **已获取到支付凭证**：按**步骤 2**处理订单号，并回调调用方业务技能确认最终业务状态。
+* **支付状态: 成功**：按**步骤 2.3**处理；该状态不代表已写入凭证。
 * **处理中**：告知用户支付仍在处理中；不得重复执行 `pay-context`。
 * **订单不存在 / NOT_FOUND / 查询不到订单**：
+  * **触发条件**：`pay-query` 输出包含 `订单不存在`、`网络或系统异常: 订单不存在`、`NOT_FOUND` 或 `查询不到订单`。
   1. 若当前流程已经确认授权成功（`Status: successful`）或本地 token 已写入，说明支付尚未真正提交或未落库；使用原 `order_no` 与 `app_id` **自动重新执行一次** `pay-context -o <order_no> -a <app_id>`。
   2. 仅允许对同一订单自动重提一次；不得新建订单，不得要求用户重新授权，不得无限重试。
   3. 重提后按「处理支付请求 → 3. 结果处理规则」重新分流。若仍然订单不存在或命令未提交成功，向用户报告支付提交失败，并展示 CLI 返回的关键错误信息。
@@ -243,7 +259,7 @@ npx --yes yeeap-cli@0.3.5 pay-query -o <order_no> -a <app_id>
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.5 auth-init-context -a <app_id>
+npx --yes yeeap-cli@0.3.6 auth-init-context -a <app_id>
 ```
 
 ## 3. 结果处理
@@ -263,7 +279,7 @@ npx --yes yeeap-cli@0.3.5 auth-init-context -a <app_id>
 ## 2. 执行命令
 
 ```bash
-npx --yes yeeap-cli@0.3.5 check-auth-context -i <auth_id> -a <app_id> -o <order_no>
+npx --yes yeeap-cli@0.3.6 check-auth-context -i <auth_id> -a <app_id> -o <order_no>
 ```
 
 > `-o <order_no>` 用于让 CLI 在授权成功后清理该订单的待授权上下文；不得省略。
