@@ -1,7 +1,7 @@
 # yeeap-skill
 
-![Version](https://img.shields.io/badge/version-0.3.5-blue.svg)
-![NPM](https://img.shields.io/badge/npm-yeeap--cli%400.3.5-cb3837.svg)
+![Version](https://img.shields.io/badge/version-0.3.6-blue.svg)
+![NPM](https://img.shields.io/badge/npm-yeeap--cli%400.3.6-cb3837.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 **Project URL:** [https://github.com/hehang195-sys/yeeap-skill](https://github.com/hehang195-sys/yeeap-skill)
@@ -27,19 +27,19 @@ npx -y skills add "hehang195-sys/yeeap-skill" --agent '*' -g -y
 业务技能 Phase 1 已将订单写入 `~/.yeeap/orders/<app_id>/<order_no>.json` 后：
 
 ```bash
-npx --yes yeeap-cli@0.3.5 pay-context -o <order_no> -a <app_id>
+npx --yes yeeap-cli@0.3.6 pay-context -o <order_no> -a <app_id>
 ```
 
 ### 2. 单独发起支付授权
 
 ```bash
-npx --yes yeeap-cli@0.3.5 auth-init-context -a <app_id>
+npx --yes yeeap-cli@0.3.6 auth-init-context -a <app_id>
 ```
 
 ### 3. 查询授权状态
 
 ```bash
-npx --yes yeeap-cli@0.3.5 check-auth-context -i <auth_id> -a <app_id>
+npx --yes yeeap-cli@0.3.6 check-auth-context -i <auth_id> -a <app_id> -o <order_no>
 ```
 
 ---
@@ -55,7 +55,7 @@ npx --yes yeeap-cli@0.3.5 check-auth-context -i <auth_id> -a <app_id>
 
 ## 权限与出站
 
-- **CLI 安装声明**：`npm:yeeap-cli@0.3.5`（锁定版本，不使用 `@latest`）
+- **CLI 安装声明**：`npm:yeeap-cli@0.3.6`（锁定版本，不使用 `@latest`）
 - **出站白名单**：
   - `registry.npmjs.org`（Preflight 与 CLI 安装/执行）
   - `qaap.yeepay.com/yeeap`（Open API：下单、授权、查询）
@@ -66,7 +66,8 @@ npx --yes yeeap-cli@0.3.5 check-auth-context -i <auth_id> -a <app_id>
 
 - 全程**不读取** `.env`、配置文件或环境变量中的私钥
 - 全程**不要求**用户提供支付密码
-- 授权采用**一次性短效令牌**，需用户人类确认后方可完成支付
+- 授权采用**一次性短效令牌**，`pay-context` 提交支付时必须携带本地 token，需用户人类确认后方可完成支付
+- `pay-query` 仅返回订单状态，不返回也不写入 `payCredential`；只有 `pay-context` 输出 `已获取到支付凭证` 后，业务 Skill 才能进入下一阶段
 - 严格支付/授权命令必须使用 CLI 支付上下文模式，避免同机多 Agent 窗口串用 agentId
 - Agent **禁止自动轮询**授权状态
 
