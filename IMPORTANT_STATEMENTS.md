@@ -17,7 +17,7 @@
 | 属性 | 说明 |
 |------|------|
 | **NPM 包** | [`yeeap-cli`](https://www.npmjs.com/package/yeeap-cli) |
-| **安装声明** | `yeeap-cli@0.3.5`，锁定版本，不使用 `@latest` |
+| **安装声明** | `yeeap-cli@0.3.6`，锁定版本，不使用 `@latest` |
 
 ---
 
@@ -28,7 +28,7 @@ yeeap-cli 鉴权采用**一次性短效会话令牌 + 服务端签权**模型，
 1. **令牌获取**：`auth-init` 命令调用 Open API 服务端，生成一次性短效授权令牌（有效期通常 5 分钟），通过授权链接返回给用户。
 2. **用户确认**：用户扫码或点击链接完成授权后，服务端将令牌标记为已授权。
 3. **令牌验证**：`pay` 命令在提交支付时携带该令牌，服务端校验令牌有效性及授权范围后完成支付。
-4. **凭据落盘**：支付成功后，服务端返回 `payCredential`，由 CLI 写入 `~/.yeeap/orders/<app_id>/<order_no>.json`。
+4. **凭据落盘**：`pay-context` 提交支付成功或命中服务端 SUCCESS 幂等路径后，服务端返回 `payCredential`，由 CLI 写入 `~/.yeeap/orders/<app_id>/<order_no>.json`；`pay-query` 不返回凭证。
 
 **安全边界：**
 - CLI **不**读取 `.env`、配置文件或环境变量中的任何私钥。
@@ -43,9 +43,10 @@ yeeap-cli 鉴权采用**一次性短效会话令牌 + 服务端签权**模型，
 
 | 命令 | 行为 |
 |------|------|
-| `pay` | 检查本地订单文件 → 检测是否需要授权 → 提交支付 → 写回 `payCredential` |
+| `pay` | 检查本地订单文件 → 查询远程订单状态 → 检测是否需要授权 → 提交支付 → 写回 `payCredential` |
 | `auth-init` | 向服务端请求一次性授权链接，返回授权 URL 与 `auth_id` |
 | `check-auth` | 查询 `auth_id` 对应的授权状态（processing / successful / failed） |
+| `pay-query` | 仅查询订单状态，不返回也不写回 `payCredential` |
 
 ---
 
